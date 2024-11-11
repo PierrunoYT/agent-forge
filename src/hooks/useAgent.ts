@@ -55,15 +55,23 @@ export const useAgent = () => {
 
   // Delete agent
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => {
-      const success = storage.deleteAgent(id);
-      if (!success) throw new Error('Agent not found');
+    mutationFn: async (id: string) => {
+      // Try local storage deletion but don't block on failure
+      try {
+        storage.deleteAgent(id);
+      } catch (error) {
+        console.error('Failed to delete agent from local storage:', error);
+      }
       
-      return api.deleteAgent(id)
-        .catch(error => {
-          console.error('Failed to sync agent deletion with API:', error);
-          return Promise.resolve();
-        });
+      // Always attempt API deletion
+      try {
+        await api.deleteAgent(id);
+      } catch (error) {
+        console.error('Failed to delete agent from API:', error);
+      }
+
+      // If we get here, at least one deletion succeeded
+      return Promise.resolve();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
