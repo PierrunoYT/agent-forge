@@ -1,15 +1,32 @@
-# Custom AI Agent Builder
+# Agent Forge
 
-A web application for building and testing custom AI agents using OpenRouter's API. Create, configure, and chat with AI agents powered by various language models.
+A powerful web application for building, customizing, and testing AI agents using OpenRouter's API. Create sophisticated AI agents with specific behaviors, personalities, and capabilities, then interact with them through an intuitive chat interface.
 
 ## Features
 
-- Create custom AI agents with specific behaviors and configurations
-- Choose from multiple AI models through OpenRouter
-- Configure model parameters (temperature, max tokens)
-- Real-time chat interface for testing agents
-- Local storage for agent configurations
-- Express.js backend for API handling
+- **Custom Agent Creation**
+  - Design agents with specific roles, behaviors, and expertise
+  - Configure detailed system prompts and instructions
+  - Set personality traits and response styles
+  - Define knowledge domains and specializations
+
+- **Advanced Model Integration**
+  - Access state-of-the-art AI models through OpenRouter
+  - Configure model parameters (temperature, max tokens, etc.)
+  - Fine-tune response characteristics
+  - Compare performance across different models
+
+- **Interactive Development Environment**
+  - Real-time chat interface for agent testing
+  - Live response previews
+  - Message history tracking
+  - Performance analysis tools
+
+- **Robust Architecture**
+  - Local storage for agent configurations
+  - Express.js backend for secure API handling
+  - TypeScript for type safety
+  - Modular component design
 
 ## Prerequisites
 
@@ -21,8 +38,8 @@ A web application for building and testing custom AI agents using OpenRouter's A
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd custom-ai-agent
+git clone https://github.com/PierrunoYT/agent-forge.git
+cd agent-forge
 ```
 
 2. Install dependencies:
@@ -74,32 +91,51 @@ npm start
 ```
 src/
 ├── components/           # React components
-│   ├── agent/           # Agent-related components
-│   ├── models/          # Model selection and configuration
-│   └── shared/          # Shared UI components
-├── lib/                 # API and SDK setup
-├── types/               # TypeScript type definitions
+│   ├── agent/           # Agent creation and management
+│   │   ├── AgentBuilder # Agent configuration interface
+│   │   ├── AgentList    # Agent management dashboard
+│   │   └── AgentTester  # Chat interface for testing
+│   ├── models/          # Model configuration
+│   │   ├── ModelSelector# AI model selection
+│   │   └── ModelConfig  # Model parameter settings
+│   └── shared/          # Reusable UI components
+├── lib/                 # Core functionality
+│   ├── api.ts          # API client setup
+│   └── openrouter.ts   # OpenRouter integration
+├── types/               # TypeScript definitions
+│   ├── Agent.ts        # Agent configuration types
+│   └── Message.ts      # Chat message types
 ├── hooks/               # Custom React hooks
+│   ├── useAgent.ts     # Agent management logic
+│   └── useChat.ts      # Chat functionality
 └── utils/              # Utility functions
+    ├── storage.ts      # Local storage management
+    └── validation.ts   # Input validation
 
 server/
-├── routes/             # API routes
+├── routes/             # API endpoints
+│   ├── agent.ts       # Agent management routes
+│   └── chat.ts        # Chat interaction routes
 ├── middleware/         # Express middleware
+│   └── error.ts       # Error handling
 └── services/          # Backend services
+    └── openrouter.ts  # OpenRouter API integration
 ```
 
 ## Technologies Used
 
 - Frontend:
-  - React
-  - TypeScript
-  - TailwindCSS
-  - React Query
-  - Vite
+  - React 18 with TypeScript
+  - TailwindCSS for styling
+  - React Query for data management
+  - Vite for build tooling
+  - Local Storage for persistence
 
 - Backend:
-  - Express.js
-  - OpenRouter SDK
+  - Express.js with TypeScript
+  - OpenRouter SDK for AI model access
+  - Error handling middleware
+  - Environment-based configuration
 
 ## Contributing
 
@@ -115,5 +151,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- OpenRouter for providing the AI model API
-- All contributors and maintainers
+- OpenRouter for providing access to state-of-the-art AI models
+- All contributors and maintainers who help improve Agent Forge
+- The open-source community for inspiration and tools
+
+## Support
+
+For support, feature requests, or bug reports, please open an issue on the GitHub repository.
