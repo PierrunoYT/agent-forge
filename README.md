@@ -149,7 +149,16 @@ server/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License. Copyright (c) 2024 PierrunoYT.
+
+See the [LICENSE](LICENSE) file for the full license text. The MIT License is a permissive license that allows you to:
+- Use the software for any purpose
+- Modify the software
+- Distribute the software
+- Sublicense the software
+- Private use
+
+The only requirement is that the license and copyright notice must be included in all copies or substantial portions of the software.
 
 ## Acknowledgments
 
