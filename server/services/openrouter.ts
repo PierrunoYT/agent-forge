@@ -1,47 +1,15 @@
 import fetch from 'node-fetch';
 import { CustomError } from '../middleware/error';
+import {
+  OpenRouterMessage,
+  OpenRouterParameters,
+  OpenRouterResponse
+} from '../../src/types/Message';
 
 interface OpenRouterConfig {
   apiKey: string;
   baseURL: string;
 }
-
-// Request types
-type ContentPart = 
-  | { type: 'text'; text: string }
-  | { 
-      type: 'image_url'; 
-      image_url: {
-        url: string;
-        detail?: string;
-      }
-    };
-
-interface Message {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | ContentPart[];
-  name?: string;
-  tool_call_id?: string;
-}
-
-interface FunctionDescription {
-  description?: string;
-  name: string;
-  parameters: object; // JSON Schema object
-}
-
-interface Tool {
-  type: 'function';
-  function: FunctionDescription;
-}
-
-type ToolChoice = 
-  | 'none'
-  | 'auto'
-  | {
-      type: 'function';
-      function: { name: string };
-    };
 
 interface ProviderPreferences {
   allow_fallbacks?: boolean;
@@ -52,50 +20,14 @@ interface ProviderPreferences {
   quantizations?: Array<'int4' | 'int8' | 'fp6' | 'fp8' | 'fp16' | 'bf16' | 'unknown'>;
 }
 
-interface ChatRequestOptions {
+interface ChatRequestOptions extends OpenRouterParameters {
   model?: string;
-  messages: Message[];
-  response_format?: { type: 'json_object' };
-  temperature?: number;
-  max_tokens?: number;
-  top_p?: number;
-  top_k?: number;
-  frequency_penalty?: number;
-  presence_penalty?: number;
-  repetition_penalty?: number;
-  seed?: number;
-  stop?: string | string[];
+  messages: OpenRouterMessage[];
   stream?: boolean;
-  tools?: Tool[];
-  tool_choice?: ToolChoice;
   provider?: ProviderPreferences;
   transforms?: string[];
   models?: string[];
   route?: 'fallback';
-}
-
-interface ChatResponse {
-  id: string;
-  choices: {
-    message: {
-      role: string;
-      content: string;
-      tool_calls?: {
-        id: string;
-        type: 'function';
-        function: {
-          name: string;
-          arguments: string;
-        };
-      }[];
-    };
-    finish_reason: string;
-  }[];
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
 }
 
 class OpenRouterService {
@@ -121,7 +53,7 @@ class OpenRouterService {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.config.apiKey}`,
           'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-          'X-Title': 'Custom AI Agent', // Optional title for openrouter.ai rankings
+          'X-Title': 'Custom AI Agent',
         },
         body: JSON.stringify({
           model: options.model,
@@ -133,12 +65,17 @@ class OpenRouterService {
           frequency_penalty: options.frequency_penalty,
           presence_penalty: options.presence_penalty,
           repetition_penalty: options.repetition_penalty,
+          min_p: options.min_p,
+          top_a: options.top_a,
           seed: options.seed,
           stop: options.stop,
           stream: options.stream ?? false,
           tools: options.tools,
           tool_choice: options.tool_choice,
           response_format: options.response_format,
+          logit_bias: options.logit_bias,
+          logprobs: options.logprobs,
+          top_logprobs: options.top_logprobs,
           provider: options.provider,
           transforms: options.transforms,
           models: options.models,
@@ -154,16 +91,31 @@ class OpenRouterService {
         );
       }
 
-      const data = await response.json() as ChatResponse;
-      return {
-        content: data.choices[0].message.content,
-        toolCalls: data.choices[0].message.tool_calls,
-        usage: {
-          promptTokens: data.usage.prompt_tokens,
-          completionTokens: data.usage.completion_tokens,
-          totalTokens: data.usage.total_tokens,
-        },
-      };
+      const data = await response.json() as OpenRouterResponse;
+      const choice = data.choices[0];
+
+      if ('message' in choice) {
+        return {
+          content: choice.message.content || '',
+          toolCalls: choice.message.tool_calls,
+          usage: data.usage ? {
+            promptTokens: data.usage.prompt_tokens,
+            completionTokens: data.usage.completion_tokens,
+            totalTokens: data.usage.total_tokens,
+          } : undefined,
+        };
+      } else if ('text' in choice) {
+        return {
+          content: choice.text,
+          usage: data.usage ? {
+            promptTokens: data.usage.prompt_tokens,
+            completionTokens: data.usage.completion_tokens,
+            totalTokens: data.usage.total_tokens,
+          } : undefined,
+        };
+      } else {
+        throw new CustomError('Unexpected response format from OpenRouter', 500);
+      }
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;

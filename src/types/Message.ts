@@ -56,3 +56,106 @@ export interface OpenRouterMessage {
   name?: string;
   tool_call_id?: string;
 }
+
+// OpenRouter API Response Types
+export interface OpenRouterResponse {
+  id: string;
+  choices: (NonStreamingChoice | StreamingChoice | NonChatChoice)[];
+  created: number;
+  model: string;
+  object: 'chat.completion' | 'chat.completion.chunk';
+  system_fingerprint?: string;
+  usage?: OpenRouterUsage;
+}
+
+export interface OpenRouterUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+export interface NonChatChoice {
+  finish_reason: string | null;
+  text: string;
+  error?: OpenRouterError;
+}
+
+export interface NonStreamingChoice {
+  finish_reason: string | null;
+  message: {
+    content: string | null;
+    role: string;
+    tool_calls?: ToolCall[];
+    function_call?: FunctionCall;
+  };
+  error?: OpenRouterError;
+}
+
+export interface StreamingChoice {
+  finish_reason: string | null;
+  delta: {
+    content: string | null;
+    role?: string;
+    tool_calls?: ToolCall[];
+    function_call?: FunctionCall;
+  };
+  error?: OpenRouterError;
+}
+
+export interface OpenRouterError {
+  code: number;
+  message: string;
+}
+
+export interface FunctionCall {
+  name: string;
+  arguments: string;
+}
+
+// Tool Types
+export interface FunctionDefinition {
+  name: string;
+  description: string;
+  parameters: {
+    type: string;
+    properties: Record<string, {
+      type: string;
+      description?: string;
+      enum?: string[];
+    }>;
+    required?: string[];
+  };
+}
+
+export interface Tool {
+  type: 'function';
+  function: FunctionDefinition;
+}
+
+// OpenRouter API Parameters
+export interface OpenRouterParameters {
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  repetition_penalty?: number;
+  min_p?: number;
+  top_a?: number;
+  seed?: number;
+  max_tokens?: number;
+  logit_bias?: Record<string, number>;
+  logprobs?: boolean;
+  top_logprobs?: number;
+  response_format?: {
+    type: 'json_object';
+  };
+  stop?: string[];
+  tools?: Tool[];
+  tool_choice?: 'none' | 'auto' | 'required' | {
+    type: 'function';
+    function: {
+      name: string;
+    };
+  };
+}
