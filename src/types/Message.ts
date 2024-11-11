@@ -1,7 +1,7 @@
 export type Role = 'system' | 'user' | 'assistant' | 'tool';
 
 export type ContentPart = 
-  | { type: 'text'; text: string }
+  | { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }
   | { 
       type: 'image_url'; 
       image_url: {
@@ -46,6 +46,7 @@ export interface ChatResponse {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
+    cacheDiscount?: number;
   };
 }
 
@@ -72,6 +73,7 @@ export interface OpenRouterUsage {
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
+  cache_discount?: number;
 }
 
 export interface NonChatChoice {
@@ -105,6 +107,10 @@ export interface StreamingChoice {
 export interface OpenRouterError {
   code: number;
   message: string;
+  metadata?: {
+    reasons?: string[];
+    flagged_input?: string;
+  };
 }
 
 export interface FunctionCall {
@@ -158,4 +164,18 @@ export interface OpenRouterParameters {
       name: string;
     };
   };
+}
+
+// OpenRouter Rate Limit Types
+export interface RateLimitInfo {
+  requests: number;
+  interval: string;
+}
+
+export interface KeyInfo {
+  label: string;
+  usage: number;
+  limit: number | null;
+  is_free_tier: boolean;
+  rate_limit: RateLimitInfo;
 }

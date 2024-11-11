@@ -3,7 +3,8 @@ import { CustomError } from '../middleware/error';
 import {
   OpenRouterMessage,
   OpenRouterParameters,
-  OpenRouterResponse
+  OpenRouterResponse,
+  KeyInfo
 } from '../../src/types/Message';
 
 interface OpenRouterConfig {
@@ -28,6 +29,10 @@ interface ChatRequestOptions extends OpenRouterParameters {
   transforms?: string[];
   models?: string[];
   route?: 'fallback';
+}
+
+interface KeyResponse {
+  data: KeyInfo;
 }
 
 class OpenRouterService {
@@ -84,9 +89,15 @@ class OpenRouterService {
       });
 
       if (!response.ok) {
-        const error = await response.json() as { message?: string };
+        const error = await response.json() as { error?: { message?: string; metadata?: { reasons?: string[] } } };
+        if (error.error?.metadata?.reasons) {
+          throw new CustomError(
+            `${error.error.message} - Reasons: ${error.error.metadata.reasons.join(', ')}`,
+            response.status
+          );
+        }
         throw new CustomError(
-          error.message || 'Failed to get response from OpenRouter',
+          error.error?.message || 'Failed to get response from OpenRouter',
           response.status
         );
       }
@@ -102,6 +113,7 @@ class OpenRouterService {
             promptTokens: data.usage.prompt_tokens,
             completionTokens: data.usage.completion_tokens,
             totalTokens: data.usage.total_tokens,
+            cacheDiscount: data.usage.cache_discount,
           } : undefined,
         };
       } else if ('text' in choice) {
@@ -111,6 +123,7 @@ class OpenRouterService {
             promptTokens: data.usage.prompt_tokens,
             completionTokens: data.usage.completion_tokens,
             totalTokens: data.usage.total_tokens,
+            cacheDiscount: data.usage.cache_discount,
           } : undefined,
         };
       } else {
@@ -144,6 +157,30 @@ class OpenRouterService {
         throw error;
       }
       throw new CustomError('Failed to fetch models', 500);
+    }
+  }
+
+  async getKeyInfo(): Promise<KeyInfo> {
+    try {
+      const response = await fetch(`${this.config.baseURL}/auth/key`, {
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+          'X-Title': 'Custom AI Agent',
+        },
+      });
+
+      if (!response.ok) {
+        throw new CustomError('Failed to fetch key information', response.status);
+      }
+
+      const data = await response.json() as KeyResponse;
+      return data.data;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError('Failed to fetch key info', 500);
     }
   }
 }

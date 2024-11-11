@@ -1,7 +1,8 @@
 import {
   OpenRouterMessage,
   OpenRouterParameters,
-  OpenRouterResponse
+  OpenRouterResponse,
+  KeyInfo
 } from '../types/Message';
 
 interface OpenRouterConfig {
@@ -78,7 +79,10 @@ class OpenRouterClient {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to get response from OpenRouter');
+        if (error.error?.metadata?.reasons) {
+          throw new Error(`${error.error.message} - Reasons: ${error.error.metadata.reasons.join(', ')}`);
+        }
+        throw new Error(error.error?.message || 'Failed to get response from OpenRouter');
       }
 
       const data = await response.json() as OpenRouterResponse;
@@ -92,6 +96,7 @@ class OpenRouterClient {
             promptTokens: data.usage.prompt_tokens,
             completionTokens: data.usage.completion_tokens,
             totalTokens: data.usage.total_tokens,
+            cacheDiscount: data.usage.cache_discount,
           } : undefined,
         };
       } else if ('text' in choice) {
@@ -101,6 +106,7 @@ class OpenRouterClient {
             promptTokens: data.usage.prompt_tokens,
             completionTokens: data.usage.completion_tokens,
             totalTokens: data.usage.total_tokens,
+            cacheDiscount: data.usage.cache_discount,
           } : undefined,
         };
       } else {
@@ -129,6 +135,28 @@ class OpenRouterClient {
       return await response.json();
     } catch (error) {
       console.error('Error fetching models:', error);
+      throw error;
+    }
+  }
+
+  async getKeyInfo(): Promise<KeyInfo> {
+    try {
+      const response = await fetch(`${this.config.baseURL}/auth/key`, {
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Custom AI Agent',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch key information');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error fetching key info:', error);
       throw error;
     }
   }
