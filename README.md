@@ -54,12 +54,14 @@ cp .env.example .env
 
 4. Update the `.env` file with your OpenRouter API key and other configurations:
 ```env
+# Frontend environment variables (must be prefixed with VITE_)
 VITE_OPENROUTER_API_KEY=your_openrouter_api_key_here
 VITE_API_URL=http://localhost:3001/api
 
+# Backend environment variables
 PORT=3001
 OPENROUTER_API_KEY=your_openrouter_api_key_here
-APP_URL=http://localhost:3000
+APP_URL=http://localhost:5173
 NODE_ENV=development
 ```
 
@@ -71,7 +73,7 @@ npm run dev
 ```
 
 This will start:
-- Frontend development server at http://localhost:3000
+- Frontend development server at http://localhost:5173
 - Backend API server at http://localhost:3001
 
 ## Building for Production
