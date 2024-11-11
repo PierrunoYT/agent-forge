@@ -3,7 +3,7 @@ import { Agent, AgentConfig } from '../types/Agent';
 import { Message, ChatResponse } from '../types/Message';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: '/api',  // Use relative URL to work with Vite's proxy
   headers: {
     'Content-Type': 'application/json',
   },
