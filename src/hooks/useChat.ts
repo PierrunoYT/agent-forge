@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Message, ChatSession } from '../types/Message';
+import { Message } from '../types/Message';
 import * as api from '../lib/api';
 import * as storage from '../utils/storage';
 import { validateMessage } from '../utils/validation';
