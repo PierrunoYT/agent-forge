@@ -3,12 +3,21 @@
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/types/*"]
+    },
+    "typeRoots": [
+      "node_modules/@types",
+      "src/types"
+    ]
   },
   "include": [
     "vite.config.ts",
-    "server/**/*"
+    "server/**/*",
+    "src/types/**/*"
   ]
 }

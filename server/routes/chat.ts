@@ -1,12 +1,20 @@
 import { Router } from 'express';
 import { CustomError } from '../middleware/error';
 import { openRouterService } from '../services/openrouter';
-import { Message } from '../../src/types/Message';
+import { Message, OpenRouterMessage, Role } from '../../src/types/Message';
 
 const router = Router();
 
 // In-memory storage for chat sessions (replace with database in production)
 const chatSessions: Record<string, Message[]> = {};
+
+// Helper function to convert our Message to OpenRouter message format
+const toOpenRouterMessage = (message: Message): OpenRouterMessage => ({
+  role: message.role,
+  content: message.richContent || message.content,
+  name: message.name,
+  tool_call_id: message.tool_call_id,
+});
 
 // Get chat history for an agent
 router.get('/:agentId/history', (req, res) => {
@@ -31,7 +39,7 @@ router.post('/:agentId', async (req, res) => {
   // Create user message
   const userMessage: Message = {
     id: crypto.randomUUID(),
-    role: 'user',
+    role: 'user' as Role,
     content: message,
     timestamp: new Date(),
   };
@@ -48,27 +56,28 @@ router.post('/:agentId', async (req, res) => {
     };
 
     // Prepare messages for OpenRouter
-    const messages = [
-      { role: 'system', content: agent.systemPrompt },
-      ...chatSessions[agentId].map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+    const messages: OpenRouterMessage[] = [
+      { role: 'system' as Role, content: agent.systemPrompt },
+      ...chatSessions[agentId].map(toOpenRouterMessage),
     ];
 
     // Get response from OpenRouter
-    const response = await openRouterService.chat(
+    const response = await openRouterService.chat({
       messages,
-      agent.model,
-      agent.temperature
-    );
+      model: agent.model,
+      temperature: agent.temperature,
+      provider: {
+        allow_fallbacks: true, // Enable fallbacks by default
+      }
+    });
 
     // Create assistant message
     const assistantMessage: Message = {
       id: crypto.randomUUID(),
-      role: 'assistant',
+      role: 'assistant' as Role,
       content: response.content,
       timestamp: new Date(),
+      toolCalls: response.toolCalls,
     };
 
     // Add assistant message to session
